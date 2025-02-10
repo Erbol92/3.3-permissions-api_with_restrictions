@@ -31,17 +31,16 @@ class AdvertisementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advertisement
         fields = ['id', 'title', 'description', 'creator',
-                  'status', 'created_at',]
+                  'status', 'created_at', 'draft',]
 
     def create(self, validated_data):
         """Метод для создания"""
         validated_data["creator"] = self.context["request"].user
-
         return super().create(validated_data)
+
 
     def validate(self, data):
         """Метод для валидации. Вызывается при создании и обновлении."""
-
         # TODO: добавьте требуемую валидацию
         qs = Advertisement.objects.filter(creator=self.context['request'].user,status=AdvertisementStatusChoices.OPEN)
         if len(qs)<=10:

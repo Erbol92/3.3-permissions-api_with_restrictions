@@ -1,6 +1,6 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
-
+from django.db.models import Q
 from rest_framework import serializers
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.decorators import action
@@ -31,11 +31,20 @@ class AdvertisementViewSet(ModelViewSet):
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = AdvertisementFilter
 
+    def get_queryset(self):
+        user = self.request.user
+        print(user.is_authenticated)
+        if user.is_authenticated:
+            return Advertisement.objects.exclude(
+                Q(draft=True) & ~Q(creator=user)
+            )
+        return Advertisement.objects.filter(draft=False)
+
+
     @action(detail=True, methods=['post'], url_path='favorite')
     def add_to_favorites(self, request, pk=None):
         advertisement = self.get_object()
         user = request.user
-        print(user)
         # Проверка, является ли пользователь создателем объявления
         if advertisement.creator == user:
             raise serializers.ValidationError('Вы не можете добавить свое объявление в избранное')
