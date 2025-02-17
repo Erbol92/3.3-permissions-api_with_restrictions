@@ -27,7 +27,6 @@ class AdvertisementViewSet(ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        print(user.is_authenticated)
         if user.is_authenticated:
             return Advertisement.objects.exclude(
                 Q(draft=True) & ~Q(creator=user)
