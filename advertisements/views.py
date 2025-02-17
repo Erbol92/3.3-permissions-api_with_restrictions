@@ -2,22 +2,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from django.db.models import Q
 from rest_framework import serializers
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from django_filters import rest_framework as filters
+
+from advertisements.filters import AdvertisementFilter
 from advertisements.models import Advertisement, FavoriteAdvertisement
 from advertisements.permissions import IsOwnerOrReadOnly
 from advertisements.serializers import AdvertisementSerializer
-
-
-class AdvertisementFilter(filters.FilterSet):
-    title = filters.CharFilter(field_name='creator', lookup_expr='icontains')  # Поиск по заголовку
-
-    class Meta:
-        model = Advertisement
-        fields = ['creator']  # Укажите поля, по которым можно фильтровать
 
 
 class AdvertisementViewSet(ModelViewSet):
@@ -27,7 +21,7 @@ class AdvertisementViewSet(ModelViewSet):
     #   сериализаторов и фильтров
     queryset = Advertisement.objects.all()
     serializer_class = AdvertisementSerializer
-    throttle_classes = [AnonRateThrottle]
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
     filter_backends = [filters.DjangoFilterBackend]
     filterset_class = AdvertisementFilter
 
@@ -66,7 +60,7 @@ class AdvertisementViewSet(ModelViewSet):
 
     def get_permissions(self):
         """Получение прав для действий."""
-        if self.action in ["create"]:
+        if self.action in ["create", "add_to_favorites", "list_favorites"]:
             return [IsAuthenticated()]
         if self.action in ["destroy", "update", "partial_update"]:
             return [IsOwnerOrReadOnly()]
